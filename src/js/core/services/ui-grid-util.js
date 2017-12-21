@@ -457,30 +457,25 @@ module.service('gridUtil', ['$log', '$window', '$document', '$http', '$templateC
 
     },
 
-    // Thanks to http://stackoverflow.com/a/13382873/888165
+
     getScrollbarWidth: function() {
-        var outer = document.createElement("div");
-        outer.style.visibility = "hidden";
-        outer.style.width = "100px";
-        outer.style.msOverflowStyle = "scrollbar"; // needed for WinJS apps
 
-        document.body.appendChild(outer);
+      // Create the measurement node
+      var scrollDiv = document.createElement("div");
+      scrollDiv.style.width = "100px";
+      scrollDiv.style.height = "100px";
+      scrollDiv.style.overflow = "scroll";
+      scrollDiv.style.position = "absolute";
+      scrollDiv.style.top = "-9999px";
+      document.body.appendChild(scrollDiv);
 
-        var widthNoScroll = outer.offsetWidth;
-        // force scrollbars
-        outer.style.overflow = "scroll";
+      // Get the scrollbar width
+      var scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth;
 
-        // add innerdiv
-        var inner = document.createElement("div");
-        inner.style.width = "100%";
-        outer.appendChild(inner);
+      // Delete the DIV 
+      scrollDiv.parentNode.removeChild(scrollDiv);
 
-        var widthWithScroll = inner.offsetWidth;
-
-        // remove divs
-        outer.parentNode.removeChild(outer);
-
-        return widthNoScroll - widthWithScroll;
+      return scrollbarWidth;
     },
 
     swap: function( elem, options, callback, args ) {
@@ -925,31 +920,30 @@ module.service('gridUtil', ['$log', '$window', '$document', '$http', '$templateC
     };
   });
 
-  // http://stackoverflow.com/a/24107550/888165
   s.closestElm = function closestElm(el, selector) {
     if (typeof(el.length) !== 'undefined' && el.length) {
       el = el[0];
     }
 
-    var matchesFn;
+    // Element.matches() polyfill
+    if (!Element.prototype.matches) {
+      Element.prototype.matches =
+          Element.prototype.matchesSelector ||
+          Element.prototype.mozMatchesSelector ||
+          Element.prototype.msMatchesSelector ||
+          Element.prototype.oMatchesSelector ||
+          Element.prototype.webkitMatchesSelector ||
+          function(s) {
+              var matches = (this.document || this.ownerDocument).querySelectorAll(s),
+                  i = matches.length;
+              while (--i >= 0 && matches.item(i) !== this) {}
+              return i > -1;
+          };
+    }
 
-    // find vendor prefix
-    ['matches','webkitMatchesSelector','mozMatchesSelector','msMatchesSelector','oMatchesSelector'].some(function(fn) {
-        if (typeof document.body[fn] === 'function') {
-            matchesFn = fn;
-            return true;
-        }
-        return false;
-    });
-
-    // traverse parents
-    var parent;
-    while (el !== null) {
-      parent = el.parentElement;
-      if (parent !== null && parent[matchesFn](selector)) {
-          return parent;
-      }
-      el = parent;
+    // Get closest match
+    for ( ; elem && elem !== document; elem = elem.parentNode ) {
+        if ( elem.matches( selector ) ) return elem;
     }
 
     return null;
@@ -987,20 +981,32 @@ module.service('gridUtil', ['$log', '$window', '$document', '$http', '$templateC
     }
   };
 
-  // http://stackoverflow.com/a/22948274/888165
-  // TODO: Opera? Mobile?
+
   s.detectBrowser = function detectBrowser() {
-    var userAgent = $window.navigator.userAgent;
 
-    var browsers = {chrome: /chrome/i, safari: /safari/i, firefox: /firefox/i, ie: /internet explorer|trident\//i};
+    var userAgentString = $window.navigator.userAgent;
 
-    for (var key in browsers) {
-      if (browsers[key].test(userAgent)) {
-        return key;
-      }
+    if (!userAgentString) {
+      return null;
     }
 
-    return 'unknown';
+    var browserRules = [
+        [ 'edge', /Edge\/([0-9\._]+)/ ],
+        [ 'chrome', /(?!Chrom.*OPR)Chrom(?:e|ium)\/([0-9\.]+)(:?\s|$)/ ],
+        [ 'firefox', /Firefox\/([0-9\.]+)(?:\s|$)/ ],
+        [ 'ie', /Trident\/7\.0.*rv\:([0-9\.]+).*\).*Gecko$/ ],
+        [ 'ie', /MSIE\s([0-9\.]+);.*Trident\/[4-7].0/ ],
+        [ 'ie', /MSIE\s(7\.0)/ ],
+        [ 'safari', /Version\/([0-9\._]+).*Safari/ ]
+    ];
+
+    var detected = browserRules.map(function(browser) {
+      var match = browser[1].exec(userAgentString);
+      return match && browser[0];
+    }).filter(Boolean)[0] || 'unknown';
+
+    return detected;
+    
   };
 
   // Borrowed from https://github.com/othree/jquery.rtl-scroll-type
