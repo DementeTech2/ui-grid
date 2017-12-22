@@ -942,8 +942,10 @@ module.service('gridUtil', ['$log', '$window', '$document', '$http', '$templateC
     }
 
     // Get closest match
-    for ( ; elem && elem !== document; elem = elem.parentNode ) {
-        if ( elem.matches( selector ) ) return elem;
+    for ( ; el && el !== document; el = el.parentNode ) {
+        if ( el.matches( selector ) ) {
+          return el;
+        }
     }
 
     return null;
