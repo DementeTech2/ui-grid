@@ -1,3 +1,19 @@
+<a name="v4.1.2"></a>
+### v4.1.2 (2017-12-21)
+
+
+#### Bug Fixes
+
+* **tutorial:** Replacing .success with .then due to angular upgrade. ([07cbe8a8](http://github.com/angular-ui/ng-grid/commit/07cbe8a8c3315e638704ded07e49b677896ab3d0))
+
+<a name="v4.1.1"></a>
+### v4.1.1 (2017-12-20)
+
+
+#### Bug Fixes
+
+* **ui-grid.info:** Updating ui-grid.info to support angular 1.6.7 ([99819cc2](http://github.com/angular-ui/ng-grid/commit/99819cc2a3a9d442e734892ec9e09847e0bd88f7))
+
 <a name="v4.1.0"></a>
 ## v4.1.0 (2017-12-18)
 
